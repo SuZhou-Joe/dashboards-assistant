@@ -168,7 +168,13 @@ export function registerChatRoutes(router: IRouter, routeOptions: RoutesOptions)
       routeOptions.messageParsers
     );
   const createChatService = async (context: RequestHandlerContext, dataSourceId?: string) =>
-    new OllyChatService(await getOpenSearchClientTransport({ context, dataSourceId }));
+    new OllyChatService(
+      await getOpenSearchClientTransport({ context, dataSourceId }),
+      new AgentFrameworkStorageService(
+        await getOpenSearchClientTransport({ context, dataSourceId }),
+        routeOptions.messageParsers
+      )
+    );
 
   const getConversationMemory = async ({
     conversationIdInResponse,
