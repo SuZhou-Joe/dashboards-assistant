@@ -147,15 +147,16 @@ export class OllyChatService implements ChatService {
       try {
         const content = 'Hello there';
         const batches = [];
-        let messageContent = '';
+        const response = await generateInteractionsAndMessages({
+          response: '',
+        });
+        const outputMessage = response.messages.find((message) => message.type === 'output');
 
         stream.write(
           streamSerializer({
             type: 'metadata',
             body: {
-              ...(await generateInteractionsAndMessages({
-                response: '',
-              })),
+              ...response,
               conversationId: outputs.conversationId,
             },
           })
@@ -165,13 +166,13 @@ export class OllyChatService implements ChatService {
           batches.push(content.substring(i, i + 2));
         }
         for (const res of batches) {
-          messageContent += res;
           stream.write(
             streamSerializer({
-              type: 'patch',
-              body: await generateInteractionsAndMessages({
-                response: messageContent,
-              }),
+              type: 'appendMessage',
+              body: {
+                messageId: outputMessage?.messageId || '',
+                content: res,
+              },
             })
           );
           await new Promise((resolve) => setTimeout(resolve, 1000));
