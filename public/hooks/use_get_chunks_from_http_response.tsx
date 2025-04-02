@@ -13,23 +13,23 @@ export const useGetChunksFromHTTPResponse = () => {
   const { chatStateDispatch } = useChatState();
 
   const getConsumedChunk$FromHttpResponse = async (props: {
-    fetchResponse: HttpResponse<unknown>;
+    fetchResponse: HttpResponse<ReadableStream | Record<string, unknown>>;
     abortController: AbortController;
   }) => {
     const chunk$ = new BehaviorSubject<StreamChunk | undefined>(undefined);
     props.abortController.signal.onabort = () => {
       chunk$.complete();
     };
-    if (props.fetchResponse.response?.headers.get('X-Stream')) {
+    if (props.fetchResponse.body?.getReader) {
       chatStateDispatch({
         type: 'updateResponseType',
         payload: {
           type: LLMResponseType.STREAMING,
         },
       });
-      const reader = props.fetchResponse.response?.body?.getReader();
+      const reader = (props.fetchResponse.body as ReadableStream).getReader();
 
-      const decoder = new TextDecoder('utf-8');
+      const decoder = new TextDecoder();
 
       function processText({
         done,
@@ -39,7 +39,7 @@ export const useGetChunksFromHTTPResponse = () => {
           chunk$.complete();
           return;
         }
-        const chunk = decoder.decode(value, { stream: true });
+        const chunk = decoder.decode(value);
         try {
           const chunkObjects = sreamDeserializer(chunk);
           chunkObjects.forEach((chunkObject) => {
@@ -80,6 +80,12 @@ export const useGetChunksFromHTTPResponse = () => {
             const { body } = chunk;
             chatStateDispatch({
               type: 'patch',
+              payload: body,
+            });
+          } else if (chunk.type === 'appendMessage') {
+            const { body } = chunk;
+            chatStateDispatch({
+              type: 'appendMessage',
               payload: body,
             });
           } else if (chunk.type === 'error') {

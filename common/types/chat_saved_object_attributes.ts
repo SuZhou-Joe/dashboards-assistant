@@ -100,4 +100,11 @@ export type StreamChunk =
   | {
       type: 'metadata';
       body: Partial<SendResponse>;
+    }
+  | {
+      type: 'appendMessage';
+      body: {
+        messageId: string;
+        content: string;
+      };
     };

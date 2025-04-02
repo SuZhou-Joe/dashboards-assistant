@@ -214,9 +214,9 @@ export function registerChatRoutes(router: IRouter, routeOptions: RoutesOptions)
       if (outputs.stream) {
         const result = response.ok({
           headers: {
+            'Content-Encoding': 'identity',
             Connection: 'keep-alive',
-            'X-Stream': true,
-            'Content-Type': 'application/x-ndjson',
+            'Content-Type': 'text/event-stream',
           },
           body: outputs.stream,
         });

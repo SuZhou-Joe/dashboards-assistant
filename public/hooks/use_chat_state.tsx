@@ -55,6 +55,13 @@ type ChatStateAction =
       payload: {
         type: LLMResponseType;
       };
+    }
+  | {
+      type: 'appendMessage';
+      payload: {
+        content: string;
+        messageId: string;
+      };
     };
 
 interface IChatStateContext {
@@ -141,6 +148,21 @@ const chatStateReducer: React.Reducer<ChatState, ChatStateAction> = (state, acti
           'interaction_id'
         );
         draft.llmError = undefined;
+        break;
+
+      case 'appendMessage':
+        const updatingMessage = state.messages.find(
+          (message) => message.messageId === action.payload.messageId
+        );
+        if (updatingMessage) {
+          const patchMessages: IMessage[] = [
+            {
+              ...updatingMessage,
+              content: updatingMessage.content + action.payload.content,
+            },
+          ];
+          draft.messages = addPatchInArray(state.messages, patchMessages, 'messageId');
+        }
         break;
 
       case 'llmRespondingChange':

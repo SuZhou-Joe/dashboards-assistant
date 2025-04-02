@@ -42,7 +42,6 @@ export const useChatActions = (): AssistantActions => {
           }),
           query: core.services.dataSource.getDataSourceQuery(),
           asResponse: true,
-          pureFetch: true,
         });
         chunk$ = await getConsumedChunk$FromHttpResponse({
           fetchResponse,
