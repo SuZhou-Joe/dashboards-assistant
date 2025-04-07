@@ -154,8 +154,8 @@ export class OllyChatService implements ChatService {
 
         stream.write(
           streamSerializer({
-            type: 'metadata',
-            body: {
+            event: 'metadata',
+            data: {
               ...response,
               conversationId: outputs.conversationId,
             },
@@ -168,8 +168,8 @@ export class OllyChatService implements ChatService {
         for (const res of batches) {
           stream.write(
             streamSerializer({
-              type: 'appendMessage',
-              body: {
+              event: 'appendMessage',
+              data: {
                 messageId: outputMessage?.messageId || '',
                 content: res,
               },
@@ -182,8 +182,8 @@ export class OllyChatService implements ChatService {
       } catch (error) {
         stream.write(
           streamSerializer({
-            type: 'error',
-            body: error.message || error,
+            event: 'error',
+            data: error.message || error,
           })
         );
         stream.end();
