@@ -204,6 +204,20 @@ export function registerChatRoutes(router: IRouter, routeOptions: RoutesOptions)
     storageService: AgentFrameworkStorageService;
   }) => {};
 
+  const getConversationMemory = async ({
+    conversationIdInResponse,
+    conversationIdInRequestBody,
+    interactionId,
+    storageService,
+    context,
+  }: {
+    conversationIdInResponse?: string;
+    conversationIdInRequestBody?: string;
+    interactionId?: string;
+    context: RequestHandlerContext;
+    storageService: AgentFrameworkStorageService;
+  }) => {};
+
   router.post(
     llmRequestRoute,
     async (

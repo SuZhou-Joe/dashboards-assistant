@@ -152,7 +152,6 @@ describe('useChatActions hook', () => {
       }),
       query: dataSourceServiceMock.getDataSourceQuery(),
       asResponse: true,
-      pureFetch: true,
     });
 
     // it should send dispatch `receive` action to remove the message without messageId
@@ -228,7 +227,6 @@ describe('useChatActions hook', () => {
         input: { type: 'input', content: 'message that send as input', contentType: 'text' },
       }),
       query: dataSourceServiceMock.getDataSourceQuery(),
-      pureFetch: true,
       asResponse: true,
     });
   });
@@ -325,7 +323,6 @@ describe('useChatActions hook', () => {
         interactionId: 'interaction_id_mock',
       }),
       query: dataSourceServiceMock.getDataSourceQuery(),
-      pureFetch: true,
       asResponse: true,
     });
     expect(chatStateDispatchMock).toHaveBeenCalledWith(
@@ -366,7 +363,6 @@ describe('useChatActions hook', () => {
         interactionId: 'interaction_id_mock',
       }),
       query: dataSourceServiceMock.getDataSourceQuery(),
-      pureFetch: true,
       asResponse: true,
     });
     expect(chatStateDispatchMock).not.toHaveBeenCalledWith(
