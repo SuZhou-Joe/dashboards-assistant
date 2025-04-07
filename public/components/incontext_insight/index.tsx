@@ -12,7 +12,6 @@ import {
   EuiCompressedFormRow,
   EuiFlexGroup,
   EuiFlexItem,
-  EuiIcon,
   EuiListGroup,
   EuiListGroupItem,
   EuiPanel,
@@ -24,8 +23,11 @@ import {
   EuiText,
   EuiWrappingPopover,
   keys,
+  EuiBetaBadge,
+  EuiButtonEmpty,
 } from '@elastic/eui';
 import React, { Children, isValidElement, useEffect, useRef, useState } from 'react';
+import { euiThemeVars } from '@osd/ui-shared-deps/theme';
 import { IncontextInsight as IncontextInsightInput } from '../../types';
 import { getIncontextInsightRegistry, getNotifications, getLogoIcon } from '../../services';
 import sparkle from '../../assets/sparkle.svg';
@@ -40,6 +42,7 @@ export interface IncontextInsightProps {
   httpSetup?: HttpSetup;
   usageCollection?: UsageCollectionSetup;
   getStartServices?: StartServicesAccessor<AssistantPluginStartDependencies>;
+  title: string;
 }
 
 // TODO: add saved objects / config to store seed suggestions
@@ -48,6 +51,7 @@ export const IncontextInsight = ({
   httpSetup,
   usageCollection,
   getStartServices,
+  title,
 }: IncontextInsightProps) => {
   const anchor = useRef<HTMLDivElement>(null);
   const anchorButton = useRef<HTMLDivElement>(null);
@@ -284,7 +288,12 @@ export const IncontextInsight = ({
             role="button"
             ref={anchorButton}
           >
-            <EuiIcon type={getLogoIcon('gradient')} size="m" />
+            <EuiBetaBadge
+              label={title}
+              style={{ backgroundColor: euiThemeVars.euiColorInk }}
+              className="summary-beta-badge"
+              iconType={getLogoIcon('gradient')}
+            />
           </div>
         </EuiFlexItem>
       </EuiFlexGroup>
@@ -330,6 +339,7 @@ export const IncontextInsight = ({
         anchorPosition="rightUp"
         offset={6}
         panelPaddingSize="s"
+        panelClassName="incontextInsightPopover"
       >
         {
           // For 'generate' type insights, we don't want to show this title but its own inner title

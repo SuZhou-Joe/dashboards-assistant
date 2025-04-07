@@ -18,6 +18,7 @@ import {
   EuiText,
   EuiTitle,
   EuiButton,
+  EuiButtonEmpty,
 } from '@elastic/eui';
 import { useEffectOnce } from 'react-use';
 import { METRIC_TYPE } from '@osd/analytics';
@@ -31,7 +32,7 @@ import { UsageCollectionSetup } from '../../../../../src/plugins/usage_collectio
 import { reportMetric } from '../../utils/report_metric';
 import { buildUrlQuery, createIndexPatterns, extractTimeRangeDSL } from '../../utils';
 import { AssistantPluginStartDependencies } from '../../types';
-import { UI_SETTINGS } from '../../../../../src/plugins/data/public';
+import { UI_SETTINGS } from '../../../../../src/plugins/data/common';
 import { formatUrlWithWorkspaceId } from '../../../../../src/core/public/utils';
 
 export const GeneratePopoverBody: React.FC<{
@@ -263,12 +264,12 @@ export const GeneratePopoverBody: React.FC<{
     const content = showInsight && insightAvailable ? insight : summary;
     return content ? (
       <>
-        <EuiPanel paddingSize="s" hasBorder hasShadow={false} color="subdued">
+        <EuiPanel paddingSize="s" hasBorder hasShadow={false}>
           <EuiText className="incontextInsightGeneratePopoverContent" size="s">
             <EuiMarkdownFormat>{content}</EuiMarkdownFormat>
           </EuiText>
           <EuiSpacer size={'xs'} />
-          {renderInnerFooter()}
+          {renderInnerFooter(content)}
         </EuiPanel>
       </>
     ) : (
@@ -289,7 +290,7 @@ export const GeneratePopoverBody: React.FC<{
                   setShowInsight(false);
                 }}
                 type="arrowLeft"
-                color={'text'}
+                color="ghost"
               />
             ) : (
               <EuiIcon
@@ -320,7 +321,9 @@ export const GeneratePopoverBody: React.FC<{
     );
   };
 
-  const renderInnerFooter = () => {
+  const TraceButton = showInsight ? EuiButtonEmpty : EuiButton;
+
+  const renderInnerFooter = (contentToCopy: string) => {
     return (
       <EuiPopoverFooter className="incontextInsightGeneratePopoverFooter" paddingSize="none">
         {displayDiscoverButton && (
@@ -330,38 +333,28 @@ export const GeneratePopoverBody: React.FC<{
             })}
           </EuiButton>
         )}
-        {
-          <div
-            className="messageActionsWrapper"
-            style={{ display: showInsight ? 'none' : 'block' }}
+        {insightAvailable && (
+          <TraceButton
+            onClick={() => {
+              setShowInsight(!showInsight);
+            }}
+            size="s"
           >
-            <MessageActions
-              contentToCopy={summary}
-              showFeedback
-              showTraceIcon={insightAvailable}
-              onViewTrace={() => {
-                setShowInsight(true);
-              }}
-              usageCollection={usageCollection}
-              isOnTrace={showInsight}
-              metricAppName={metricAppName}
-            />
-          </div>
-        }
+            {showInsight
+              ? i18n.translate('assistantDashboards.incontextInsight.backToSummary', {
+                  defaultMessage: 'Back to summary',
+                })
+              : i18n.translate('assistantDashboards.incontextInsight.viewInsight', {
+                  defaultMessage: 'View insights',
+                })}
+          </TraceButton>
+        )}
         {
-          <div
-            className="messageActionsWrapper"
-            style={{ display: showInsight && insightAvailable ? 'block' : 'none' }}
-          >
+          <div className="messageActionsWrapper">
             <MessageActions
-              contentToCopy={insight}
+              contentToCopy={contentToCopy}
               showFeedback
-              showTraceIcon={insightAvailable}
-              onViewTrace={() => {
-                setShowInsight(false);
-              }}
               usageCollection={usageCollection}
-              isOnTrace={showInsight}
               metricAppName={metricAppName}
             />
           </div>

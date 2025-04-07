@@ -96,9 +96,21 @@ export const useGetChunksFromHTTPResponse = () => {
       },
       (error) => {
         chatStateDispatch({ type: 'error', payload: error });
+        chatStateDispatch({
+          type: 'updateResponseType',
+          payload: {
+            type: LLMResponseType.TEXT,
+          },
+        });
       },
       () => {
         chatStateDispatch({ type: 'llmRespondingChange', payload: { flag: false } });
+        chatStateDispatch({
+          type: 'updateResponseType',
+          payload: {
+            type: LLMResponseType.TEXT,
+          },
+        });
       }
     );
 
