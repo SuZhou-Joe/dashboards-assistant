@@ -90,20 +90,20 @@ export interface SendResponse {
 
 export type StreamChunk =
   | {
-      type: 'patch';
-      body: Pick<SendResponse, 'interactions' | 'messages'>;
+      event: 'patch';
+      data: Pick<SendResponse, 'interactions' | 'messages'>;
     }
   | {
-      type: 'error';
-      body: string;
+      event: 'error';
+      data: string;
     }
   | {
-      type: 'metadata';
-      body: Partial<SendResponse>;
+      event: 'metadata';
+      data: Partial<SendResponse>;
     }
   | {
-      type: 'appendMessage';
-      body: {
+      event: 'appendMessage';
+      data: {
         messageId: string;
         content: string;
       };

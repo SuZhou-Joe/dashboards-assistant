@@ -3,27 +3,48 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import { createParser } from 'eventsource-parser';
 import { StreamChunk } from '../../types/chat_saved_object_attributes';
 
 const separators = `\n\n`;
 const prefix = 'data: ';
 
 export const streamSerializer = (chunk: StreamChunk): string => {
-  return `${prefix}${JSON.stringify(chunk)}${separators}`;
+  const { event, data } = chunk;
+  let chunkString = '';
+  if (event) {
+    chunkString += `event: ${event}\n`;
+  }
+
+  chunkString += `${prefix}${JSON.stringify(data)}${separators}`;
+
+  return chunkString;
 };
 
 export const sreamDeserializer = (content: string): StreamChunk[] => {
-  return content
-    .split(separators)
-    .filter((item) => item)
-    .map((item) => {
+  const streamChunks: StreamChunk[] = [];
+  const parser = createParser({
+    onEvent(message) {
       try {
-        return JSON.parse(item.replace(new RegExp(`^${prefix}`), ''));
+        const dataPayload = JSON.parse(message.data);
+        streamChunks.push({
+          ...message,
+          data: dataPayload,
+        } as StreamChunk);
       } catch (e) {
-        return {
-          type: 'error',
-          body: e.message,
-        };
+        streamChunks.push({
+          event: 'error',
+          data: e.message,
+        });
       }
-    });
+    },
+    onError(error) {
+      streamChunks.push({
+        event: 'error',
+        data: error.message,
+      });
+    },
+  });
+  parser.feed(content);
+  return streamChunks;
 };

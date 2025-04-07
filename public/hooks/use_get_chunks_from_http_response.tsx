@@ -62,8 +62,8 @@ export const useGetChunksFromHTTPResponse = () => {
       });
       const response = await props.fetchResponse.response?.json();
       chunk$.next({
-        type: 'metadata',
-        body: response,
+        event: 'metadata',
+        data: response,
       });
 
       // Complete right after next will only eat the emit value
@@ -76,20 +76,20 @@ export const useGetChunksFromHTTPResponse = () => {
     chunk$.subscribe(
       (chunk) => {
         if (chunk) {
-          if (chunk.type === 'patch') {
-            const { body } = chunk;
+          if (chunk.event === 'patch') {
+            const { data } = chunk;
             chatStateDispatch({
               type: 'patch',
-              payload: body,
+              payload: data,
             });
-          } else if (chunk.type === 'appendMessage') {
-            const { body } = chunk;
+          } else if (chunk.event === 'appendMessage') {
+            const { data } = chunk;
             chatStateDispatch({
               type: 'appendMessage',
-              payload: body,
+              payload: data,
             });
-          } else if (chunk.type === 'error') {
-            chatStateDispatch({ type: 'error', payload: new Error(chunk.body) });
+          } else if (chunk.event === 'error') {
+            chatStateDispatch({ type: 'error', payload: new Error(chunk.data) });
             return;
           }
         }

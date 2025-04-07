@@ -26,7 +26,7 @@ export const useChatActions = (): AssistantActions => {
   const { chatState, chatStateDispatch } = useChatState();
   const { getConsumedChunk$FromHttpResponse } = useGetChunksFromHTTPResponse();
 
-  const send = (input: IMessage) =>
+  const send = (input: IMessage): Promise<void> =>
     new Promise(async (resolve) => {
       const abortController = new AbortController();
       abortControllerRef = abortController;
@@ -58,27 +58,27 @@ export const useChatActions = (): AssistantActions => {
       chunk$.subscribe(
         (chunk) => {
           if (chunk) {
-            if (chunk.type === 'metadata') {
-              const { body } = chunk;
+            if (chunk.event === 'metadata') {
+              const { data } = chunk;
               // Refresh history list after new conversation created if new conversation saved and history list page visible
               if (
                 !chatContext.conversationId &&
-                body.conversationId &&
+                data.conversationId &&
                 core.services.conversations.options?.page === 1 &&
                 chatContext.selectedTabId === TAB_ID.HISTORY
               ) {
                 core.services.conversations.reload();
               }
-              if (body.conversationId) {
-                chatContext.setConversationId(body.conversationId);
+              if (data.conversationId) {
+                chatContext.setConversationId(data.conversationId);
               }
 
               // set title for first time
-              if (body.title && !chatContext.title) {
-                chatContext.setTitle(body.title);
+              if (data.title && !chatContext.title) {
+                chatContext.setTitle(data.title);
               }
 
-              if (body.messages?.length && body.interactions?.length) {
+              if (data.messages?.length && data.interactions?.length) {
                 /**
                  * Remove messages that do not have messageId
                  * because they are used for displaying loading state
@@ -97,8 +97,8 @@ export const useChatActions = (): AssistantActions => {
                 chatStateDispatch({
                   type: 'patch',
                   payload: {
-                    messages: body.messages,
-                    interactions: body.interactions,
+                    messages: data.messages,
+                    interactions: data.interactions,
                   },
                 });
               }
@@ -232,7 +232,6 @@ export const useChatActions = (): AssistantActions => {
           }),
           query: core.services.dataSource.getDataSourceQuery(),
           asResponse: true,
-          pureFetch: true,
         });
 
         chunk$ = await getConsumedChunk$FromHttpResponse({
@@ -242,7 +241,7 @@ export const useChatActions = (): AssistantActions => {
 
         chunk$.subscribe((chunk) => {
           if (chunk) {
-            if (chunk.type === 'metadata') {
+            if (chunk.event === 'metadata') {
               const findRegeratedMessageIndex = findLastIndex(
                 chatState.messages,
                 (message) => message.type === 'input'
@@ -261,13 +260,13 @@ export const useChatActions = (): AssistantActions => {
                       ...chatState.messages
                         .slice(0, findRegeratedMessageIndex)
                         .filter((item) => item.messageId),
-                      ...(chunk.body.messages || []),
+                      ...(chunk.data.messages || []),
                     ],
                     interactions: [
                       ...chatState.interactions.filter(
                         (interaction) => interaction.interaction_id !== interactionId
                       ),
-                      ...(chunk.body.interactions || []),
+                      ...(chunk.data.interactions || []),
                     ],
                   },
                 });
