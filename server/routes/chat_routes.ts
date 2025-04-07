@@ -176,48 +176,6 @@ export function registerChatRoutes(router: IRouter, routeOptions: RoutesOptions)
       )
     );
 
-  const getConversationMemory = async ({
-    conversationIdInResponse,
-    conversationIdInRequestBody,
-    interactionId,
-    storageService,
-    context,
-  }: {
-    conversationIdInResponse?: string;
-    conversationIdInRequestBody?: string;
-    interactionId?: string;
-    context: RequestHandlerContext;
-    storageService: AgentFrameworkStorageService;
-  }) => {};
-
-  const getConversationMemory = async ({
-    conversationIdInResponse,
-    conversationIdInRequestBody,
-    interactionId,
-    storageService,
-    context,
-  }: {
-    conversationIdInResponse?: string;
-    conversationIdInRequestBody?: string;
-    interactionId?: string;
-    context: RequestHandlerContext;
-    storageService: AgentFrameworkStorageService;
-  }) => {};
-
-  const getConversationMemory = async ({
-    conversationIdInResponse,
-    conversationIdInRequestBody,
-    interactionId,
-    storageService,
-    context,
-  }: {
-    conversationIdInResponse?: string;
-    conversationIdInRequestBody?: string;
-    interactionId?: string;
-    context: RequestHandlerContext;
-    storageService: AgentFrameworkStorageService;
-  }) => {};
-
   router.post(
     llmRequestRoute,
     async (
