@@ -5,7 +5,7 @@
 
 import { produce } from 'immer';
 import React, { useContext, useMemo, useReducer } from 'react';
-import { IMessage, Interaction } from '../../common/types/chat_saved_object_attributes';
+import { IMessage, Interaction, IOutput } from '../../common/types/chat_saved_object_attributes';
 import { findLastIndex } from '../utils';
 
 export interface ChatState {
@@ -61,6 +61,13 @@ type ChatStateAction =
       payload: {
         content: string;
         messageId: string;
+      };
+    }
+  | {
+      type: 'updateOutputMessage';
+      payload: {
+        messageId: string;
+        payload: Partial<Omit<IOutput, 'messageId'>>;
       };
     };
 
@@ -160,6 +167,21 @@ const chatStateReducer: React.Reducer<ChatState, ChatStateAction> = (state, acti
               ...updatingMessage,
               content: updatingMessage.content + action.payload.content,
             },
+          ];
+          draft.messages = addPatchInArray(state.messages, patchMessages, 'messageId');
+        }
+        break;
+
+      case 'updateOutputMessage':
+        const messageForUpdate = state.messages.find(
+          (message) => message.messageId === action.payload.messageId
+        );
+        if (messageForUpdate) {
+          const patchMessages: IOutput[] = [
+            {
+              ...messageForUpdate,
+              ...action.payload.payload,
+            } as IOutput,
           ];
           draft.messages = addPatchInArray(state.messages, patchMessages, 'messageId');
         }
