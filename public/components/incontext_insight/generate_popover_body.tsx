@@ -19,6 +19,7 @@ import {
   EuiTitle,
   EuiButton,
   EuiButtonEmpty,
+  EuiLoadingSpinner,
 } from '@elastic/eui';
 import { useEffectOnce } from 'react-use';
 import { METRIC_TYPE } from '@osd/analytics';
@@ -27,7 +28,6 @@ import { ContextObj, IncontextInsight as IncontextInsightInput } from '../../typ
 import { getNotifications, getLogoIcon } from '../../services';
 import { HttpSetup, StartServicesAccessor } from '../../../../../src/core/public';
 import { SUMMARY_ASSISTANT_API } from '../../../common/constants/llm';
-import shiny_sparkle from '../../assets/shiny_sparkle.svg';
 import { UsageCollectionSetup } from '../../../../../src/plugins/usage_collection/public';
 import { reportMetric } from '../../utils/report_metric';
 import { buildUrlQuery, createIndexPatterns, extractTimeRangeDSL } from '../../utils';
@@ -260,8 +260,10 @@ export const GeneratePopoverBody: React.FC<{
     }
   };
 
+  const getContent = () => (showInsight && insightAvailable ? insight : summary);
+
   const renderContent = () => {
-    const content = showInsight && insightAvailable ? insight : summary;
+    const content = getContent();
     return content ? (
       <>
         <EuiPanel paddingSize="s" hasBorder hasShadow={false}>
@@ -278,27 +280,32 @@ export const GeneratePopoverBody: React.FC<{
   };
 
   const renderInnerTitle = () => {
+    const content = getContent();
     return (
       <EuiPopoverTitle className="incontextInsightGeneratePopoverTitle" paddingSize="l">
         <EuiFlexGroup gutterSize="xs" alignItems="center">
           <EuiFlexItem grow={false}>
-            {showInsight ? (
-              <EuiIcon
-                aria-label="back-to-summary"
-                size="m"
-                onClick={() => {
-                  setShowInsight(false);
-                }}
-                type="arrowLeft"
-                color="ghost"
-              />
+            {content ? (
+              showInsight ? (
+                <EuiIcon
+                  aria-label="back-to-summary"
+                  size="m"
+                  onClick={() => {
+                    setShowInsight(false);
+                  }}
+                  type="arrowLeft"
+                  color="ghost"
+                />
+              ) : (
+                <EuiIcon
+                  aria-label="alert-assistant"
+                  color="hollow"
+                  size="m"
+                  type={getLogoIcon('white')}
+                />
+              )
             ) : (
-              <EuiIcon
-                aria-label="alert-assistant"
-                color="hollow"
-                size="m"
-                type={getLogoIcon('gradient', shiny_sparkle)}
-              />
+              <EuiLoadingSpinner />
             )}
           </EuiFlexItem>
           <EuiFlexItem>

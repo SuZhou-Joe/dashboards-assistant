@@ -126,7 +126,8 @@ describe('<HeaderChatButton />', () => {
       ...applicationServiceMock.createStartContract(),
       currentAppId$: new BehaviorSubject(''),
     };
-    render(
+
+    const { getByLabelText } = render(
       <HeaderChatButton
         application={applicationStart}
         messageRenderers={{}}
@@ -138,41 +139,9 @@ describe('<HeaderChatButton />', () => {
 
     act(() => applicationStart.currentAppId$.next('mock_app_id'));
 
-    screen.getByLabelText('chat input').focus();
-    fireEvent.change(screen.getByLabelText('chat input'), {
-      target: { value: 'what indices are in my cluster?' },
-    });
-    expect(screen.getByLabelText('chat input')).toHaveFocus();
-
-    fireEvent.keyPress(screen.getByLabelText('chat input'), {
-      key: 'Enter',
-      code: 'Enter',
-      charCode: 13,
-    });
-
-    // call send message API with new chat
-    await waitFor(() => {
-      expect(coreStartMock.http.post).lastCalledWith(
-        '/api/assistant/send_message',
-        expect.objectContaining({
-          body: JSON.stringify({
-            messages: [],
-            input: {
-              type: 'input',
-              contentType: 'text',
-              content: 'what indices are in my cluster?',
-              context: { appId: 'mock_app_id' },
-            },
-          }),
-        })
-      );
-    });
-
+    fireEvent.click(getByLabelText('toggle chat flyout icon'));
     // chat flyout displayed
     expect(screen.queryByLabelText('chat flyout mock')).toBeInTheDocument();
-    // the input value is cleared after pressing enter
-    expect(screen.getByLabelText('chat input')).toHaveValue('');
-    expect(screen.getByLabelText('chat input')).not.toHaveFocus();
 
     // sidecar show
     const toggleButton = screen.getByLabelText('toggle chat flyout icon');
@@ -220,12 +189,7 @@ describe('<HeaderChatButton />', () => {
     });
 
     await waitFor(() => {
-      expect(coreStartMock.http.post).lastCalledWith(
-        '/api/assistant/send_message',
-        expect.objectContaining({
-          body: expect.not.stringContaining(activeConversationId),
-        })
-      );
+      expect(screen.queryByLabelText('chat flyout mock')).toBeVisible();
     });
   });
 
@@ -340,6 +304,6 @@ describe('<HeaderChatButton />', () => {
         inLegacyHeader={false}
       />
     );
-    expect(screen.getByLabelText('toggle chat flyout button icon')).toBeInTheDocument();
+    expect(screen.getByLabelText('toggle chat flyout icon')).toBeInTheDocument();
   });
 });

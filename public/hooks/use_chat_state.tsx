@@ -13,6 +13,7 @@ export interface ChatState {
   interactions: Interaction[];
   llmResponding: boolean;
   llmError?: Error;
+  nextToken?: string;
   llmResponseType?: LLMResponseType;
 }
 
@@ -31,6 +32,7 @@ type ChatStateAction =
       payload: {
         messages: ChatState['messages'];
         interactions: ChatState['interactions'];
+        nextToken?: ChatState['nextToken'];
       };
     }
   | {
@@ -42,6 +44,33 @@ type ChatStateAction =
       payload: {
         messages: ChatState['messages'];
         interactions: ChatState['interactions'];
+        nextToken?: ChatState['nextToken'];
+      };
+    }
+  | {
+      type: 'llmRespondingChange';
+      payload: {
+        flag: boolean;
+      };
+    }
+  | {
+      type: 'updateResponseType';
+      payload: {
+        type: LLMResponseType;
+      };
+    }
+  | {
+      type: 'appendMessageContent';
+      payload: {
+        content: string;
+        messageId: string;
+      };
+    }
+  | {
+      type: 'updateOutputMessage';
+      payload: {
+        messageId: string;
+        payload: Partial<Omit<IOutput, 'messageId'>>;
       };
     }
   | {
@@ -124,9 +153,14 @@ const chatStateReducer: React.Reducer<ChatState, ChatStateAction> = (state, acti
         break;
 
       case 'receive':
-        draft.messages = action.payload.messages;
+        if (draft.nextToken) {
+          draft.messages = action.payload.messages.concat(state.messages);
+        } else {
+          draft.messages = action.payload.messages;
+        }
         draft.interactions = action.payload.interactions;
         draft.llmError = undefined;
+        draft.nextToken = action.payload.nextToken;
         break;
 
       case 'error':
@@ -157,7 +191,7 @@ const chatStateReducer: React.Reducer<ChatState, ChatStateAction> = (state, acti
         draft.llmError = undefined;
         break;
 
-      case 'appendMessage':
+      case 'appendMessageContent':
         const updatingMessage = state.messages.find(
           (message) => message.messageId === action.payload.messageId
         );

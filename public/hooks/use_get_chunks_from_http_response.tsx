@@ -5,87 +5,81 @@
 
 import { BehaviorSubject } from 'rxjs';
 import { LLMResponseType, useChatState } from './use_chat_state';
-import { sreamDeserializer } from '../../common/utils/stream/serializer';
-import { HttpResponse } from '../../../../src/core/public';
+import { streamDeserializer } from '../../common/utils/stream/serializer';
 import { StreamChunk } from '../../common/types/chat_saved_object_attributes';
+import { MessageContentPuller } from '../utils/message_content_puller';
+import { convertEventStreamToObservable } from '../../common/utils/stream/stream_to_observable';
 
 export const useGetChunksFromHTTPResponse = () => {
   const { chatStateDispatch } = useChatState();
 
   const getConsumedChunk$FromHttpResponse = async (props: {
-    fetchResponse: HttpResponse<ReadableStream | Record<string, unknown>>;
+    stream: ReadableStream;
     abortController: AbortController;
   }) => {
     const chunk$ = new BehaviorSubject<StreamChunk | undefined>(undefined);
-    props.abortController.signal.onabort = () => {
-      chunk$.complete();
-    };
-    if (props.fetchResponse.body?.getReader) {
-      chatStateDispatch({
-        type: 'updateResponseType',
-        payload: {
-          type: LLMResponseType.STREAMING,
-        },
-      });
-      const reader = (props.fetchResponse.body as ReadableStream).getReader();
-
-      const decoder = new TextDecoder();
-
-      function processText({
-        done,
-        value,
-      }: ReadableStreamReadResult<Uint8Array>): Promise<void> | void {
-        if (done) {
-          chunk$.complete();
+    const messageContentPuller = new MessageContentPuller();
+    const result = convertEventStreamToObservable(props.stream, props.abortController);
+    props.abortController.signal.addEventListener('abort', () => {
+      messageContentPuller.stop();
+      result.cancel();
+    });
+    chatStateDispatch({
+      type: 'updateResponseType',
+      payload: {
+        type: LLMResponseType.STREAMING,
+      },
+    });
+    result.output$.subscribe({
+      next: (chunk: string) => {
+        try {
+          const chunkObjects = streamDeserializer(chunk);
+          for (const chunkObject of chunkObjects) {
+            if (chunkObject.event === 'appendMessageContent') {
+              messageContentPuller.addMessageContent(
+                chunkObject.data.messageId,
+                chunkObject.data.content
+              );
+            } else {
+              chunk$.next(chunkObject);
+            }
+          }
+        } catch (e) {
+          chunk$.error(e);
           return;
         }
-        const chunk = decoder.decode(value);
-        try {
-          const chunkObjects = sreamDeserializer(chunk);
-          chunkObjects.forEach((chunkObject) => {
-            chunk$.next(chunkObject);
-          });
-        } catch (e) {
-          // can not parse the chunk.
-          chunk$.error(e);
-        }
-        return reader?.read().then(processText);
-      }
+      },
+      complete: () => {
+        messageContentPuller.inputComplete();
+      },
+    });
 
-      reader?.read().then(processText);
-    } else {
-      chatStateDispatch({
-        type: 'updateResponseType',
-        payload: {
-          type: LLMResponseType.TEXT,
-        },
-      });
-      const response = await props.fetchResponse.response?.json();
-      chunk$.next({
-        event: 'metadata',
-        data: response,
-      });
-
-      // Complete right after next will only eat the emit value
-      // add a setTimeout to delay it into next event loop
-      setTimeout(() => {
+    const messageContentPullerSubscription = messageContentPuller.getOutput$().subscribe({
+      next: (message) => {
+        chunk$.next({
+          event: 'appendMessageContent',
+          data: {
+            messageId: message.messageId,
+            content: message.messageContent,
+          },
+        });
+      },
+      complete: () => {
         chunk$.complete();
-      }, 0);
-    }
+        messageContentPuller.stop();
+        messageContentPullerSubscription?.unsubscribe();
+      },
+    });
+
+    messageContentPuller.start();
 
     chunk$.subscribe(
       (chunk) => {
         if (chunk) {
-          if (chunk.event === 'patch') {
+          if (chunk.event === 'appendMessageContent') {
             const { data } = chunk;
             chatStateDispatch({
-              type: 'patch',
-              payload: data,
-            });
-          } else if (chunk.event === 'appendMessage') {
-            const { data } = chunk;
-            chatStateDispatch({
-              type: 'appendMessage',
+              type: 'appendMessageContent',
               payload: data,
             });
           } else if (chunk.event === 'updateOutputMessage') {

@@ -30,6 +30,7 @@ export interface IConversation {
   updatedTimeMs: number;
   messages: IMessage[];
   interactions: Interaction[];
+  nextToken?: string;
 }
 
 export interface IConversationFindResponse {
@@ -90,10 +91,6 @@ export interface SendResponse {
 
 export type StreamChunk =
   | {
-      event: 'patch';
-      data: Pick<SendResponse, 'interactions' | 'messages'>;
-    }
-  | {
       event: 'error';
       data: string;
     }
@@ -102,7 +99,7 @@ export type StreamChunk =
       data: Partial<SendResponse>;
     }
   | {
-      event: 'appendMessage';
+      event: 'appendMessageContent';
       data: {
         messageId: string;
         content: string;
