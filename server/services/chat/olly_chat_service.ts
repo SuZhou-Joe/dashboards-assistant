@@ -168,14 +168,14 @@ export class OllyChatService implements ChatService {
         for (const res of batches) {
           stream.write(
             streamSerializer({
-              event: 'appendMessage',
+              event: 'appendMessageContent',
               data: {
                 messageId: outputMessage?.messageId || '',
                 content: res,
               },
             })
           );
-          await new Promise((resolve) => setTimeout(resolve, 10));
+          await new Promise((resolve) => setTimeout(resolve, 1000));
         }
 
         stream.end();
