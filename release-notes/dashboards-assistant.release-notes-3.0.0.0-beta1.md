@@ -14,6 +14,7 @@ Compatible with OpenSearch and OpenSearch Dashboards version 3.0.0-beta1
 - Refactor InContext style, add white logo and remove outdated code ([#529](https://github.com/opensearch-project/dashboards-assistant/pull/529))
 - Change chatbot entry point to a single button ([#540](https://github.com/opensearch-project/dashboards-assistant/pull/540))
 - Support streaming output([#493](https://github.com/opensearch-project/dashboards-assistant/pull/493))
+- Update event names for t2v and feedback ([#543](https://github.com/opensearch-project/dashboards-assistant/pull/543))
 
 ### Bug Fixes
 
@@ -21,10 +22,12 @@ Compatible with OpenSearch and OpenSearch Dashboards version 3.0.0-beta1
 - Fix vertically alignment of alert insights popover title ([#526](https://github.com/opensearch-project/dashboards-assistant/pull/526))
 - Change alert summary icon color to white ([#533](https://github.com/opensearch-project/dashboards-assistant/pull/533))
 - Fix query assistant menu disappear due to upstream method signature change([#541]https://github.com/opensearch-project/dashboards-assistant/pull/541)
+- Fix .plugins-ml-memory-meta not found when get conversations ([#542](https://github.com/opensearch-project/dashboards-assistant/pull/542))
 
 ### Infrastructure
 
 - Fix failed UTs with OSD 3.0 ([#527](https://github.com/opensearch-project/dashboards-assistant/pull/527))
+- Fix empty codecov report in CI([#547](https://github.com/opensearch-project/dashboards-assistant/pull/547))
 
 ### Maintenance
 

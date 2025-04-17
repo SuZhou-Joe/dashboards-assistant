@@ -72,32 +72,6 @@ type ChatStateAction =
         messageId: string;
         payload: Partial<Omit<IOutput, 'messageId'>>;
       };
-    }
-  | {
-      type: 'llmRespondingChange';
-      payload: {
-        flag: boolean;
-      };
-    }
-  | {
-      type: 'updateResponseType';
-      payload: {
-        type: LLMResponseType;
-      };
-    }
-  | {
-      type: 'appendMessage';
-      payload: {
-        content: string;
-        messageId: string;
-      };
-    }
-  | {
-      type: 'updateOutputMessage';
-      payload: {
-        messageId: string;
-        payload: Partial<Omit<IOutput, 'messageId'>>;
-      };
     };
 
 interface IChatStateContext {
