@@ -6,11 +6,17 @@
 import { BehaviorSubject, Observable, Subscriber } from 'rxjs';
 
 /**
- * Giving 10 chars every 50 miliseconds,
+ * Giving 10 chars every 40 miliseconds,
  * the speed looks good in practice so we make it as default.
  */
 const DEFAULT_JOB_INTERVAL = 50;
-const DEFAULT_CONTENT_SLICE_LENGTH = 10;
+const DEFAULT_CONTENT_SLICE_LENGTH = 30;
+
+/**
+ * use 150 as default
+ * since hyperlink usually occupy 80+ length.
+ */
+const DEFAULT_MAX_BUFFER_LENGTH = 150;
 
 interface IMessageContentPullerOptions {
   jobInterval: number;
@@ -36,11 +42,7 @@ export class MessageContentPuller {
     const {
       jobInterval = DEFAULT_JOB_INTERVAL,
       contentSliceLength = DEFAULT_CONTENT_SLICE_LENGTH,
-      /**
-       * use contentSliceLength * 5 as default
-       * since hyberlink usually occupy 20-30 length
-       */
-      maxBufferLength = contentSliceLength * 5,
+      maxBufferLength = DEFAULT_MAX_BUFFER_LENGTH,
       isContentReadyToUse = () => true,
     } = options || {};
     this.messageContentChunk$ = new BehaviorSubject<Record<string, string>>({});
@@ -67,11 +69,11 @@ export class MessageContentPuller {
      *
      * 1. Input stream is closed and all the content has been pulled.
      * 2. The slice length exceeds the max buffer length client defined.
-     * 3. The content is good to emit without special characters like hyberlink.
+     * 3. The content is good to emit without special characters like hyperlink.
      */
     if (
       (this.inputCompleted && !restContent.length) ||
-      contentSliceLength >= this.options.maxBufferLength ||
+      messageContentCandidate.length >= this.options.maxBufferLength ||
       this.options.isContentReadyToUse(messageContentCandidate)
     ) {
       this.outputSubscriber?.next({
@@ -89,7 +91,7 @@ export class MessageContentPuller {
       this.messageContentChunk$.next(currentChunkMap);
       this.lastContentSliceLengthMap[messageId] = 0;
     } else {
-      this.lastContentSliceLengthMap[messageId] = contentSliceLength;
+      this.lastContentSliceLengthMap[messageId] = messageContentCandidate.length;
     }
   }
 
