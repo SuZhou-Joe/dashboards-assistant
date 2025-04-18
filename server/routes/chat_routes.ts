@@ -5,7 +5,7 @@
 
 import { ResponseError } from '@opensearch-project/opensearch/lib/errors';
 import { schema, TypeOf } from '@osd/config-schema';
-import { SendResponse } from 'common/types/chat_saved_object_attributes';
+import { IInput, IMessage, SendResponse } from 'common/types/chat_saved_object_attributes';
 import {
   HttpResponsePayload,
   IOpenSearchDashboardsResponse,
@@ -169,7 +169,13 @@ export function registerChatRoutes(router: IRouter, routeOptions: RoutesOptions)
       routeOptions.messageParsers
     );
   const createChatService = async (context: RequestHandlerContext, dataSourceId?: string) =>
-    new OllyChatService(await getOpenSearchClientTransport({ context, dataSourceId }));
+    new OllyChatService(
+      await getOpenSearchClientTransport({ context, dataSourceId }),
+      new AgentFrameworkStorageService(
+        await getOpenSearchClientTransport({ context, dataSourceId }),
+        routeOptions.messageParsers
+      )
+    );
 
   router.post(
     llmRequestRoute,
@@ -305,6 +311,10 @@ export function registerChatRoutes(router: IRouter, routeOptions: RoutesOptions)
         const getResponse = await storageService.getConversations(request.query);
         return response.ok({ body: getResponse });
       } catch (error) {
+        // Return empty result for 404 errors
+        if (error?.meta?.statusCode === 404) {
+          return response.ok({ body: { objects: [], total: 0 } });
+        }
         context.assistant_plugin.logger.error(error);
         return handleError(error, response, context.assistant_plugin.logger);
       }

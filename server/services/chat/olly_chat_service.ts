@@ -4,11 +4,14 @@
  */
 
 import { ApiResponse } from '@opensearch-project/opensearch';
+import { Stream } from 'stream';
 import { OpenSearchClient } from '../../../../../src/core/server';
-import { IMessage, IInput } from '../../../common/types/chat_saved_object_attributes';
+import { IMessage, IInput, Interaction } from '../../../common/types/chat_saved_object_attributes';
 import { ChatService } from './chat_service';
 import { ML_COMMONS_BASE_API, ROOT_AGENT_CONFIG_ID } from '../../utils/constants';
 import { getAgentIdByConfigName } from '../../routes/get_agent';
+import { streamSerializer } from '../../../common/utils/stream/serializer';
+import { AgentFrameworkStorageService } from '../storage/agent_framework_storage_service';
 
 interface AgentRunPayload {
   question?: string;
@@ -24,7 +27,10 @@ const INTERACTION_ID_FIELDS = ['parent_message_id', 'parent_interaction_id'];
 export class OllyChatService implements ChatService {
   static abortControllers: Map<string, AbortController> = new Map();
 
-  constructor(private readonly opensearchClientTransport: OpenSearchClient['transport']) {}
+  constructor(
+    private readonly opensearchClientTransport: OpenSearchClient['transport'],
+    private readonly agentFrameworkStorageService: AgentFrameworkStorageService
+  ) {}
 
   private async getRootAgent(): Promise<string> {
     return await getAgentIdByConfigName(ROOT_AGENT_CONFIG_ID, this.opensearchClientTransport);
@@ -88,15 +94,7 @@ export class OllyChatService implements ChatService {
     }
   }
 
-  async requestLLM(payload: {
-    messages: IMessage[];
-    input: IInput;
-    conversationId?: string;
-  }): Promise<{
-    messages: IMessage[];
-    conversationId: string;
-    interactionId: string;
-  }> {
+  async requestLLM(payload: { messages: IMessage[]; input: IInput; conversationId?: string }) {
     const { input, conversationId } = payload;
 
     let llmInput = input.content;
@@ -119,7 +117,103 @@ export class OllyChatService implements ChatService {
       parametersPayload.memory_id = conversationId;
     }
 
-    return await this.requestAgentRun(parametersPayload);
+    const stream = new Stream.PassThrough();
+
+    const interactionId = Date.now();
+
+    // const outputs = await this.requestAgentRun(parametersPayload);
+
+    // const generateInteractionsAndMessages = async (interaction: Partial<Interaction>) => {
+    //   const interactions = [
+    //     {
+    //       response: '',
+    //       ...interaction,
+    //       input: input.content,
+    //       conversation_id: outputs.conversationId,
+    //       interaction_id: outputs.interactionId,
+    //       create_time: new Date().toISOString(),
+    //     },
+    //   ];
+
+    //   const messages = await this.agentFrameworkStorageService.getMessagesFromInteractions(
+    //     interactions
+    //   );
+
+    //   return {
+    //     interactions,
+    //     messages,
+    //   };
+    // };
+
+    process.nextTick(async () => {
+      try {
+        const content = 'Hello there, this is hyberlink: [hi](http://www.baidu.com)';
+        const batches = [];
+
+        stream.write(
+          streamSerializer({
+            event: 'metadata',
+            data: {
+              interactions: [
+                {
+                  input: input.content,
+                  response: '',
+                  conversation_id: conversationId as string,
+                  interaction_id: '' + interactionId,
+                  create_time: new Date().toISOString(),
+                },
+              ],
+              messages: [
+                {
+                  ...input,
+                  messageId: `${interactionId}_0`,
+                },
+                {
+                  type: 'output',
+                  contentType: 'markdown',
+                  content: '',
+                  messageId: `${interactionId}_1`,
+                },
+              ],
+              conversationId,
+            },
+          })
+        );
+
+        for (let i = 0; i < content.length; i += 2) {
+          batches.push(content.substring(i, i + 2));
+        }
+        for (const res of batches) {
+          stream.write(
+            streamSerializer({
+              event: 'appendMessageContent',
+              data: {
+                messageId: `${interactionId}_1`,
+                content: res,
+              },
+            })
+          );
+          await new Promise((resolve) => setTimeout(resolve, 500));
+        }
+
+        stream.end();
+      } catch (error) {
+        stream.write(
+          streamSerializer({
+            event: 'error',
+            data: error.message || error,
+          })
+        );
+        stream.end();
+      }
+    });
+
+    return {
+      messages: [],
+      conversationId,
+      interactionId,
+      stream,
+    };
   }
 
   async regenerate(payload: {
