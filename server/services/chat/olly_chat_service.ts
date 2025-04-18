@@ -147,7 +147,69 @@ export class OllyChatService implements ChatService {
 
     process.nextTick(async () => {
       try {
-        const content = 'Hello there, this is hyberlink: [hi](http://www.baidu.com)';
+        const content = `Visit [mylink](https://www.alink.com/subpathforthelink/latest/mylink-ug/security.html) for more details.
+
+Certainly! Here are some best practices for securing OpenSearch Dashboard data sources: [[1]](https://github.com/opensearch-project/documentation/blob/main/data-protection.md)
+
+1. Use network isolation:
+  - Deploy your OpenSearch cluster behind a reverse proxy or load balancer to control access.
+  - Configure proper firewall rules to restrict traffic to your OpenSearch nodes.
+  - Consider using Docker networks or Kubernetes network policies for containerized deployments.
+
+2. Implement encryption:
+  - Enable TLS/SSL encryption for your OpenSearch cluster to secure data in transit. [[2]](https://github.com/opensearch-project/security/blob/main/docs/encryption.md)
+  - Configure disk encryption for your storage volumes to protect data at rest.
+  - Use secure key management practices for your certificates and encryption keys.
+
+3. Configure fine-grained access control: [[3]](https://github.com/opensearch-project/opensearch-lambda/blob/main/README.md)
+  - Install and configure the Security plugin for OpenSearch.
+  - Enable fine-grained access control to manage user permissions at the index, document, and field levels.
+  - Use role-based access control to assign appropriate permissions to users and applications.
+
+4. Secure authentication:
+  - Set up strong authentication mechanisms using the Security plugin.
+  - Consider implementing SAML, LDAP, or OAuth integration for enterprise authentication.
+  - Use internal user database with strong password policies for smaller deployments.
+
+5. Enable audit logging:
+  - Configure the audit log module in the Security plugin to track user activities.
+  - Regularly review audit logs for suspicious activities.
+  - Consider forwarding logs to a centralized logging system for long-term storage and analysis.
+
+6. Implement least privilege access:
+  - Create roles with minimal required permissions for different user types.
+  - Regularly review and update access policies to maintain the principle of least privilege.
+  - Use backend roles to map to your existing organizational structure.
+
+7. Use HTTPS for all connections:
+  - Ensure that all connections to your OpenSearch cluster use HTTPS.
+  - Configure modern TLS protocols and cipher suites for secure communications.
+  - Regularly update and rotate SSL certificates.
+
+8. Enable multi-factor authentication (MFA):
+  - Implement MFA for administrative access to OpenSearch Dashboards.
+  - Consider using external identity providers that support MFA.
+
+9. Regular updates and patching:
+  - Keep your OpenSearch cluster updated with the latest security patches and versions.
+  - Follow a structured approach to testing updates before applying to production.
+
+10. Monitor and alert:
+    - Set up monitoring for your OpenSearch cluster using the Notifications plugin.
+    - Configure alerts for suspicious activities or performance issues.
+    - Use tools like Prometheus and Grafana for advanced monitoring.
+
+11. Implement API request filtering:
+    - Use the Security plugin to restrict API operations based on user roles.
+    - Consider implementing an API gateway for additional request validation.
+
+12. Secure your configuration:
+    - Protect your OpenSearch configuration files with appropriate file permissions.
+    - Use environment variables or secure vaults for sensitive configuration values.
+    - Implement configuration as code with proper security reviews.
+
+Remember to regularly review and update your security configurations to align with the latest security best practices and your organization's requirements. For the most up-to-date and detailed security guidance, always refer to the official OpenSearch documentation and community resources.
+        `;
         const batches = [];
 
         stream.write(
@@ -180,8 +242,8 @@ export class OllyChatService implements ChatService {
           })
         );
 
-        for (let i = 0; i < content.length; i += 2) {
-          batches.push(content.substring(i, i + 2));
+        for (let i = 0; i < content.length; i += 300) {
+          batches.push(content.substring(i, i + 300));
         }
         for (const res of batches) {
           stream.write(
