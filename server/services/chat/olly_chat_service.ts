@@ -119,45 +119,63 @@ export class OllyChatService implements ChatService {
 
     const stream = new Stream.PassThrough();
 
-    const outputs = await this.requestAgentRun(parametersPayload);
+    const interactionId = Date.now();
 
-    const generateInteractionsAndMessages = async (interaction: Partial<Interaction>) => {
-      const interactions = [
-        {
-          response: '',
-          ...interaction,
-          input: input.content,
-          conversation_id: outputs.conversationId,
-          interaction_id: outputs.interactionId,
-          create_time: new Date().toISOString(),
-        },
-      ];
+    // const outputs = await this.requestAgentRun(parametersPayload);
 
-      const messages = await this.agentFrameworkStorageService.getMessagesFromInteractions(
-        interactions
-      );
+    // const generateInteractionsAndMessages = async (interaction: Partial<Interaction>) => {
+    //   const interactions = [
+    //     {
+    //       response: '',
+    //       ...interaction,
+    //       input: input.content,
+    //       conversation_id: outputs.conversationId,
+    //       interaction_id: outputs.interactionId,
+    //       create_time: new Date().toISOString(),
+    //     },
+    //   ];
 
-      return {
-        interactions,
-        messages,
-      };
-    };
+    //   const messages = await this.agentFrameworkStorageService.getMessagesFromInteractions(
+    //     interactions
+    //   );
+
+    //   return {
+    //     interactions,
+    //     messages,
+    //   };
+    // };
 
     process.nextTick(async () => {
       try {
-        const content = 'Hello there';
+        const content = 'Hello there, this is hyberlink: [hi](http://www.baidu.com)';
         const batches = [];
-        const response = await generateInteractionsAndMessages({
-          response: '',
-        });
-        const outputMessage = response.messages.find((message) => message.type === 'output');
 
         stream.write(
           streamSerializer({
             event: 'metadata',
             data: {
-              ...response,
-              conversationId: outputs.conversationId,
+              interactions: [
+                {
+                  input: input.content,
+                  response: '',
+                  conversation_id: conversationId as string,
+                  interaction_id: '' + interactionId,
+                  create_time: new Date().toISOString(),
+                },
+              ],
+              messages: [
+                {
+                  ...input,
+                  messageId: `${interactionId}_0`,
+                },
+                {
+                  type: 'output',
+                  contentType: 'markdown',
+                  content: '',
+                  messageId: `${interactionId}_1`,
+                },
+              ],
+              conversationId,
             },
           })
         );
@@ -170,12 +188,12 @@ export class OllyChatService implements ChatService {
             streamSerializer({
               event: 'appendMessageContent',
               data: {
-                messageId: outputMessage?.messageId || '',
+                messageId: `${interactionId}_1`,
                 content: res,
               },
             })
           );
-          await new Promise((resolve) => setTimeout(resolve, 1000));
+          await new Promise((resolve) => setTimeout(resolve, 500));
         }
 
         stream.end();
@@ -192,8 +210,8 @@ export class OllyChatService implements ChatService {
 
     return {
       messages: [],
-      conversationId: outputs.conversationId,
-      interactionId: outputs.interactionId,
+      conversationId,
+      interactionId,
       stream,
     };
   }
