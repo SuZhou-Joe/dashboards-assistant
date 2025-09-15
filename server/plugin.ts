@@ -28,6 +28,7 @@ import { capabilitiesProvider as visNLQCapabilitiesProvider } from './vis_type_n
 import { visNLQSavedObjectType } from './vis_type_nlq/saved_object_type';
 import { capabilitiesProvider } from './capabilities';
 import { ENABLE_AI_FEATURES } from './utils/constants';
+import { PPLQueryParser } from './parsers/ppl_query_parser';
 
 export class AssistantPlugin implements Plugin<AssistantPluginSetup, AssistantPluginStart> {
   private readonly logger: Logger;
@@ -124,6 +125,7 @@ export class AssistantPlugin implements Plugin<AssistantPluginSetup, AssistantPl
 
     registerMessageParser(BasicInputOutputParser);
     registerMessageParser(VisualizationCardParser);
+    registerMessageParser(PPLQueryParser);
 
     return {
       assistantService: assistantServiceSetup,
