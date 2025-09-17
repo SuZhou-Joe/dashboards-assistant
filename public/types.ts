@@ -27,6 +27,7 @@ import {
 import { QueryEnhancementsPluginSetup } from '../../../src/plugins/query_enhancements/public';
 
 import { ConfigSchema } from '../common/types/config';
+import { ContextProviderStart } from '../../../src/plugins/context_provider/public';
 
 export interface RenderProps {
   props: MessageContentProps;
@@ -54,6 +55,7 @@ export interface AssistantPluginStartDependencies {
   expressions: ExpressionsStart;
   savedObjects: SavedObjectsStart;
   usageCollection?: UsageCollectionStart;
+  contextProvider?: ContextProviderStart;
 }
 
 export interface AssistantPluginSetupDependencies {

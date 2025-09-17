@@ -365,8 +365,11 @@ export class AssistantPlugin
 
   public start(
     core: CoreStart,
-    { data, expressions, uiActions }: AssistantPluginStartDependencies
+    { data, expressions, uiActions, contextProvider }: AssistantPluginStartDependencies
   ): AssistantStart {
+    contextProvider?.getStaticContext$().subscribe((staticContext) => {
+      console.log('staticContext', staticContext);
+    });
     const assistantServiceStart = this.assistantService.start(core.http);
     setCoreStart(core);
     setChrome(core.chrome);
